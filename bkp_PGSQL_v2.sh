@@ -33,11 +33,11 @@
 #       - Ajuste na retenção do backup, removendo assim backups antigos mesmo se o servidor estiver desligado em sua proxima execução
 #=============================================================================================
 
-source PARAMETROSBKPBD
+source PARAMETROS
 
 send_mail()
 {
-        source PARAMETROSBKPBD
+        source PARAMETROS
         echo -e "Verificar com urgencia o status de backup do banco de dados de $(hostname) ocorrido em $DATALOG em $DESTINOBASE" | mail -s "$hostname - ERRO NO PROCESSO DE BACKUP... LOG LOCALIZADO EM $LOGBANCO" ${TO[$x]}
         echo -e "$DATALOG $LOGBANCO: Email de notificação enviado para $TO" >> $LOGBANCO
         exit 0
