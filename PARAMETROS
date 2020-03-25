@@ -1,0 +1,14 @@
+#
+BASE="dbcallcenter"
+DATAHORA=`date +"%Y-%m-%d_%H"`
+DATALOG=`date +"%Y-%m-%d_%H:%M"`
+#DATAREMOVER=`date +"%Y-%m-%d" --date="5 days ago"`
+MAXRET=5 #numero de dias máximo de retenção de backup
+DESTINOBASE="/mnt/storage/backup/PGSQL"
+DESTINO="$DESTINOBASE/$DATAHORA"
+###DISCOMONTAGEM pode ser alterado dentro do script caso não haja unidade de disco para montagem
+DISCOMONTAGEM="$(cat /etc/fstab | grep -o "^UUID.*/mnt/.*" | cut -d " " -f1 | head -n 1)"
+QTDISCO="$(cat /etc/fstab | grep -o "^UUID.*/mnt/.*" | cut -d " " -f1 | wc -l)"
+ESPACODISCO="$(df $DESTINOBASE | sed -E "s/.* (.*)% .*$/\1/g" | tail -n 1)"
+TO="infraestrutura@smartnx.io"
+LOGBANCO="/var/log/BKP_BD.log"
