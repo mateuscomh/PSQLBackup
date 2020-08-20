@@ -8,7 +8,7 @@
 #       - OBRIGATÓRIO em caso de discos rígidos/virtualizados serem registrados em /etc/fstab.
 #       - OBRIGATÓRIO caminho de montagem em /mnt para discos e unidades de rede.
 #       - Todos os ajustes de cada cliente deverão ser escritos no arquivo de variáveis PARAMETROSBKPBD.
-#       VERSAO:  0.3.1
+#       VERSAO:  0.3.2
 #       CRIADO:  12/02/2020
 #	AUTOR: Matheus Martins
 #       REVISAO:  ---
@@ -31,6 +31,8 @@
 #       24/03/2020 09:00
 #       - Ajuste nas funções de sendmail e trap error que não estavam exportando o arquivos de PARAMETROSBKPBD
 #       - Ajuste na retenção do backup, removendo assim backups antigos mesmo se o servidor estiver desligado em sua proxima execução
+#       19/08/2020 00:00
+#       - Adicionado lockfile para evitar execucao simultanea
 #=============================================================================================
 
 source PARAMETROS
@@ -52,6 +54,10 @@ trap_error()
 }
 trap 'trap_error' 1 2 3 5 6 15 25
 
+#Lockfile para evitar execução duplicada
+if [ ! -e /tmp/lockfile ]; then
+    touch /tmp/lockfile
+    
 #Validar se existem discos a serem montados
 if [ $QTDISCO -eq 0 ];
 then
@@ -89,6 +95,10 @@ then
 
 #Vaccum analyze
        /usr/bin/psql -U dbcallcenter -c "vacuum analyze"; >> $LOGBANCO
+
+#Removendo Lockfile
+        rm /tmp/lockfile
+
 else
         echo "$DATALOG: $PONTOMONTAGEM com menos de 15% de espaço livre." >> $LOGBANCO;
         send_mail
