@@ -33,73 +33,63 @@
 #       - Ajuste na retenção do backup, removendo assim backups antigos mesmo se o servidor estiver desligado em sua proxima execução
 #       19/08/2020 00:00
 #       - Adicionado lockfile para evitar execucao simultanea
+#		05/10/2021 22:00
+#		- Ajustada identação e removido lockfile
 #=============================================================================================
 
 source PARAMETROS
 
 send_mail()
-{
-        source PARAMETROS
-        echo -e "Verificar com urgencia o status de backup do banco de dados de $(hostname) ocorrido em $DATALOG em $DESTINOBASE" | mail -s "$hostname - ERRO NO PROCESSO DE BACKUP... LOG LOCALIZADO EM $LOGBANCO" ${TO[$x]}
-        echo -e "$DATALOG $LOGBANCO: Email de notificação enviado para $TO" >> $LOGBANCO
-        exit 0
+{	source PARAMETROS
+	echo -e "Verificar com urgencia o status de backup do banco de dados de $(hostname) ocorrido em $DATALOG em $DESTINOBASE" | mail -s "$hostname - ERRO NO PROCESSO DE BACKUP... LOG LOCALIZADO EM $LOGBANCO" ${TO[$x]}
+	echo -e "$DATALOG $LOGBANCO: Email de notificação enviado para $TO" >> $LOGBANCO
+	exit 0
 }
 
 trap_error()
 {
-        echo -e "$DATALOG: Erro na execucao do script de backup de banco BACKUP DE $DATAHORA NAO REALIZADO" >> $LOGBANCO
-        /bin/rm -rvf $DESTINO >> $LOGBANCO
-        send_mail
-        exit 0
+	echo -e "$DATALOG: Erro na execucao do script de backup de banco BACKUP DE $DATAHORA NAO REALIZADO" >> $LOGBANCO
+	/bin/rm -rvf $DESTINO >> $LOGBANCO
+	send_mail
+	exit 0
 }
 trap 'trap_error' 1 2 3 5 6 15 25
-
-#Lockfile para evitar execução duplicada
-if [ ! -e /tmp/lockfile ]; then
-    touch /tmp/lockfile
     
 #Validar se existem discos a serem montados
-if [ $QTDISCO -eq 0 ];
-then
-        echo "OK Nao existem particoes a serem montadas"
-        echo "Destino de backup em /dados/backup/PGSQL"
-        DESTINO="/$DESTINOBASE/$DATAHORA"
-elif [ ! -d $DESTINOBASE ];
-then
-        for i in $(seq $QTDISCO); do
-                PONTOMONTAGEM=$(cat /etc/fstab | grep -o "/mnt/.*" | cut -d " " -f1 | head -n $i);
-                sleep 2
-                mount $PONTOMONTAGEM
-                ESPACODISCO=$(df $DESTINOBASE | grep $DISCOMONTAGEM | sed -E "s/.* (.*)% .*$/\1/g")
-        done
+if [ $QTDISCO -eq 0 ]; then
+	echo "OK Nao existem particoes a serem montadas"
+	echo "Destino de backup em /dados/backup/PGSQL"
+	DESTINO="/$DESTINOBASE/$DATAHORA"
+	elif [ ! -d $DESTINOBASE ]; then
+	for i in $(seq $QTDISCO); do
+		PONTOMONTAGEM=$(cat /etc/fstab | grep -o "/mnt/.*" | cut -d " " -f1 | head -n $i);
+		sleep 2
+		mount $PONTOMONTAGEM
+		ESPACODISCO=$(df $DESTINOBASE | grep $DISCOMONTAGEM | sed -E "s/.* (.*)% .*$/\1/g")
+	done
 else
-        echo -e "$DATALOG: Discos montados, iniciando processo de backup" >> $LOGBANCO
+	echo -e "$DATALOG: Discos montados, iniciando processo de backup" >> $LOGBANCO
 fi
 sleep 2
 ESPACODISCO="$( df $DESTINOBASE | sed -E "s/.* (.*)% .*$/\1/g" | tail -n 1)"
 
 #Executando backup
-if [ "$ESPACODISCO" -lt 85 -a -d $DESTINOBASE ] ;
-then
+if [ "$ESPACODISCO" -lt 85 -a -d $DESTINOBASE ] ;then
+	#Removendo backup antigo
+	find $DESTINOBASE/ -maxdepth 1 -mtime +$MAXRET -exec rm -rfv "{}" \; >> $LOGBANCO && echo "$DATALOG: Removidos os backups antigos:" >> $LOGBANCO
 
-#Removendo backup antigo
-        find $DESTINOBASE/ -maxdepth 1 -mtime +$MAXRET -exec rm -rfv "{}" \; >> $LOGBANCO && echo "$DATALOG: Removidos os backups antigos:" >> $LOGBANCO
-        
-#Cria pasta no destino com data/hora
-       /bin/mkdir -p "$DESTINO"
+	#Cria pasta no destino com data/hora
+	/bin/mkdir -p "$DESTINO"
 
-#Gerando backup de banco
-       echo "$DATALOG: Gerando Backup Base - dbcallcenter em: $DESTINO" >> $LOGBANCO
-       /usr/bin/pg_dump -U dbcallcenter $BASE | gzip -9 > $DESTINO/bkp_base_$BASE.sql.gz
-       echo "$DATALOG: Backup criado: $DESTINO/bkp_base_$BASE.sql.gz" >> $LOGBANCO
+	#Gerando backup de banco
+	echo "$DATALOG: Gerando Backup Base - dbcallcenter em: $DESTINO" >> $LOGBANCO
+	/usr/bin/pg_dump -U dbcallcenter $BASE | gzip -9 > $DESTINO/bkp_base_$BASE.sql.gz
+	echo "$DATALOG: Backup criado: $DESTINO/bkp_base_$BASE.sql.gz" >> $LOGBANCO
 
-#Vaccum analyze
-       /usr/bin/psql -U dbcallcenter -c "vacuum analyze"; >> $LOGBANCO
-
-#Removendo Lockfile
-        rm /tmp/lockfile
+	#Vaccum analyze
+	/usr/bin/psql -U dbcallcenter -c "vacuum analyze"; >> $LOGBANCO
 
 else
-        echo "$DATALOG: $PONTOMONTAGEM com menos de 15% de espaço livre." >> $LOGBANCO;
-        send_mail
+	echo "$DATALOG: $PONTOMONTAGEM com menos de 15% de espaço livre." >> $LOGBANCO;
+	send_mail
 fi
