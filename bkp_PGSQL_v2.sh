@@ -14,7 +14,7 @@
 #       REVISAO:  ---
 #       CHANGELOG:
 #       13/02/2020 15:00 
-#       - Adicionada função de envio de emails para infra@smartnx.io
+#       - Adicionada função de envio de emails
 #       14/02/2020 17:00
 #       - Ajuste na trap com as saidas específicas de saída
 #       17/02/2020 11:15
@@ -27,7 +27,7 @@
 #       16/03/2020 11:20
 #       - Ajustado cabeçalho e corpo de email para melhor informar das notificações de eventos de erros ocorridos
 #       22/03/2020 12:00
-#       - Adicionado webook de notificação do github no Discord da Smartnx
+#       - Adicionado webook de notificação do github no Discord
 #       24/03/2020 09:00
 #       - Ajuste nas funções de sendmail e trap error que não estavam exportando o arquivos de PARAMETROSBKPBD
 #       - Ajuste na retenção do backup, removendo assim backups antigos mesmo se o servidor estiver desligado em sua proxima execução
