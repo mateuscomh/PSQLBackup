@@ -1,7 +1,7 @@
 #!/bin/bash
 #============================================================================================
 #       ARQUIVO:  bkp_PGSQLv2.sh
-#       DESCRICAO: Verifica ponto de montagem de storage, remove backups com mais de X dias, gera um dump do banco e compacta. Em caso de erro notifica via email.
+#       DESCRICAO: Montagem e gerenciamento de backups, dump e compacta BD e envia via email de status.
 #       REQUISITOS: 
 #       * HOMOLOGADO:  Em distribuições CentOS 6.x 
 #       - OBRIGATÓRIO o arquivo de variáveis "PARAMETROSBKPBD" disponibilizado no PATH (/usr/bin/PARAMETROSBKPBD).
@@ -30,7 +30,7 @@
 #       - Adicionado webook de notificação do github no Discord
 #       24/03/2020 09:00
 #       - Ajuste nas funções de sendmail e trap error que não estavam exportando o arquivos de PARAMETROSBKPBD
-#       - Ajuste na retenção do backup, removendo assim backups antigos mesmo se o servidor estiver desligado em sua proxima execução
+#       - Ajuste na retenção do backup, caso  servidor estiver desligado será executado em sua proxima chamada
 #       19/08/2020 00:00
 #       - Adicionado lockfile para evitar execucao simultanea
 #		05/10/2021 22:00
